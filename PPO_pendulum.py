@@ -5,7 +5,11 @@ Based on:
 2. [https://arxiv.org/abs/1707.06347]
 View more on this tutorial website: https://morvanzhou.github.io/tutorials
 """
-import tensorflow as tf
+
+#import tensorflow as tf
+# Compatibilidade com tensorflow v1
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import matplotlib.pyplot as plt
 import gym
