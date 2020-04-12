@@ -11,8 +11,8 @@ View more on this tutorial website: https://morvanzhou.github.io/tutorials
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 import numpy as np
-import matplotlib.pyplot as plt
-import gym
+import matplotlib.pyplot as plt # Plota graficos matematicos
+import gym  # Environment: ambiente onde a simulação vai acontecer
 
 EP_MAX = 600
 EP_LEN = 200
