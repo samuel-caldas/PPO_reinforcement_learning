@@ -30,7 +30,7 @@ METHOD = dict(name='clip', epsilon=0.2)     # Metodo de clip sujerido pelos pap�
                                             # (Clipped surrogate objective)
 											# epsilon=0.2 Valor de epsilon sujerido pelos papéis
 
-                                            
+
 class PPO(object):  # Classe PPO agrega:
                     #   As redes neurais do ATOR e da CRITICA
                     #   Funções para atualizar as redes neurais
@@ -68,17 +68,19 @@ class PPO(object):  # Classe PPO agrega:
 
         # ATOR:
         #   Politica atual
-        pi, pi_params = self._build_anet('pi', trainable=True)  # Criação da rede neural (pi) para a politica atual do ATOR através da função build_anet, definindo como treinavel
-                                                                # pi é a saida da rede e pi_params são os parametros (estado atual) da rede
-                                                                # Os parametros sao ultilizados para atualizar as politicas atual a antiga.
-                                                                # A cada atualização da rede, os parametros da politica atual passam para a politica antiga
+        pi, pi_params = self._build_anet('pi', trainable=True)                  # Criação da rede neural (pi) para a politica atual do ATOR através da função build_anet, definindo como treinavel
+                                                                                #   pi é a saida da rede e pi_params são os parametros (estado atual) da rede
+                                                                                #   Os parametros pi_params sao ultilizados para atualizar as politicas atual a antiga.
+
         with tf.variable_scope('sample_action'):
             self.sample_op = tf.squeeze(pi.sample(1), axis=0)   # choosing action
 
         #   Politica antiga
-        oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)                        # Criação da rede neural oldpi para a politica antiga do ATOR através da função build_anet, definindo como não treinavel
+        oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)        # Criação da rede neural oldpi para a politica antiga do ATOR através da função build_anet, definindo como não treinavel
+
         with tf.variable_scope('update_oldpi'):                                                 # Atualização dos pesos dos parametros de oldpi tendo como referencia os pesos de pi
-            self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)] # Update_oldpi_op acumula todos os valores de pi ao decorrer do episodio
+            self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)] # A cada atualização da rede, os parametros da politica atual passam para a politica antiga
+                                                                                                # Update_oldpi_op acumula todos os valores de pi ao decorrer do episodio
 
         # Implementação da função de perda PPO
         with tf.variable_scope('loss'): # Funçao de perda:
@@ -104,19 +106,19 @@ class PPO(object):  # Classe PPO agrega:
             self.atrain_op = tf.train.AdamOptimizer(A_LR).minimize(self.aloss)  # Ultilizamos o otimizador ADAM, com a taxa de aprendizado do ATOR A_LR
                                                                                 # com minimize processamos os gradientes do ATOR através da perda do ATOR em aloss
 
-        ################################################
-        tf.summary.FileWriter("log/", self.sess.graph)  # Salvando o modelo na pasta log para analize futura no tensorboard
+        tf.summary.FileWriter("log/", self.sess.graph)      # Salvando o modelo na pasta log para analize futura no tensorboard
 
-        self.sess.run(tf.global_variables_initializer())    # Inicializando todas as váriaveis definidas para analize futura no tensorboard
-
-    def update(self, s, a, r):
-        self.sess.run(self.update_oldpi_op)
-        adv = self.sess.run(self.advantage, {self.tfs: s, self.tfdc_r: r})
-
-        # update actor
+        self.sess.run(tf.global_variables_initializer())    # Inicializando todas as váriaveis definidas
+    
+    # Função de atualizaçao
+    def update(self, s, a, r): # Recebe o estado, a ação e a recompensa
+        self.sess.run(self.update_oldpi_op) # Executa a matriz update_oldpi_op que comtem todos os parametros de pi/oldpi
+        
+        # Atualiza o ATOR
+        adv = self.sess.run(self.advantage, {self.tfs: s, self.tfdc_r: r})  # Calcula a vantagem, ou seja, a recompensa do ATOR através 
         [self.sess.run(self.atrain_op, {self.tfs: s, self.tfa: a, self.tfadv: adv}) for _ in range(A_UPDATE_STEPS)]
 
-        # update critic
+        # Atualiza a CRITICA através da função de treinamento
         [self.sess.run(self.ctrain_op, {self.tfs: s, self.tfdc_r: r}) for _ in range(C_UPDATE_STEPS)]
 
     def _build_anet(self, name, trainable): # Build the current & hold structure for the policies 
