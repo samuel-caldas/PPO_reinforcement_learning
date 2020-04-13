@@ -100,3 +100,6 @@ ENV/
 # mypy
 .mypy_cache/
 .vscode/settings.json
+log/events.out.tfevents.1586741477.DELL
+log/events.out.tfevents.1586741674.DELL
+log/events.out.tfevents.1586743358.DELL
