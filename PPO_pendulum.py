@@ -28,7 +28,7 @@ S_DIM, A_DIM = 3, 1 # S_DIM é a dimensao do estado, ou seja, quantas entradas e
 
 METHOD = dict(name='clip', epsilon=0.2)     # Metodo de clip sujerido pelos papéis como mais eficiente
                                             # (Clipped surrogate objective)
-											# epsilon=0.2 Valor de epsilon sujerido pelos papéis
+                                            # epsilon=0.2 Valor de epsilon sujerido pelos papéis
 
 
 class PPO(object):  # Classe PPO agrega:
@@ -163,7 +163,7 @@ for ep in range(EP_MAX):
         # update ppo
         if (t+1) % BATCH == 0 or t == EP_LEN-1:
             v_s_ = ppo.get_v(s_) # Obteniendo la respuesta de la NN del Critic, entregando el estado 's_' 
-            						# V = learned state-value function
+                                    # V = learned state-value function
             discounted_r = []
             for r in buffer_r[::-1]:
                 v_s_ = r + GAMMA * v_s_
