@@ -15,16 +15,16 @@ import matplotlib.pyplot as plt # Plota graficos matematicos
 import gym  # Environment: ambiente onde a simulação vai acontecer
 
 # Configurações
-EP_MAX = 600        # Qantidade total de episódios
-EP_LEN = 200        # Quantas sequencias vão acontecer dentro de cada episódio
-GAMMA = 0.9         # Advantage (?)
-A_LR = 0.0001       # Taxa de aprendizado do ATOR
-C_LR = 0.0002       # Taxa de aprendizado da CRITICA
-BATCH = 64          # Tamanho do pacote à entrar para treinamento em cada etapa (?)
-A_UPDATE_STEPS = 20 # Quantidade de vezes que o treinamento do ATOR vai tomar a cadeia de dados de batch
-C_UPDATE_STEPS = 20 # Quantidade de vezes que o treinamento da CRITICA vai tomar a cadeia de dados de batch
-S_DIM, A_DIM = 3, 1 # S_DIM é a dimensao do estado, ou seja, quantas entradas ele terá
-                    # A_DIM é a dimensão das ações, ou seja, quantas acões podem ser executadas
+EP_MAX = 600            # Qantidade total de episódios
+EP_LEN = 200            # Quantas sequencias vão acontecer dentro de cada episódio
+GAMMA = 0.9             # Advantage (?)
+A_LR = 0.0001           # Taxa de aprendizado do ATOR
+C_LR = 0.0002           # Taxa de aprendizado da CRITICA
+BATCH = 64              # Tamanho do pacote à entrar para treinamento em cada etapa (?)
+A_UPDATE_STEPS = 20     # Quantidade de vezes que o treinamento do ATOR vai tomar a cadeia de dados de batch
+C_UPDATE_STEPS = 20     # Quantidade de vezes que o treinamento da CRITICA vai tomar a cadeia de dados de batch
+S_DIM, A_DIM = 3, 1     # S_DIM é a dimensao do estado, ou seja, quantas entradas ele terá
+                        # A_DIM é a dimensão das ações, ou seja, quantas acões podem ser executadas
 
 METHOD = dict(name='clip', epsilon=0.2)     # Metodo de clip sujerido pelos papéis como mais eficiente
                                             # (Clipped surrogate objective)
