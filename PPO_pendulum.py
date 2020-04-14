@@ -32,11 +32,11 @@ METHOD = dict(name='clip', epsilon=0.2)     # Metodo de clip sujerido pelos pap�
 
 
 class PPO(object):  # Classe PPO agrega:
-                    #   As redes neurais do ATOR e da CRITICA
-                    #   Funções para atualizar as redes neurais
-                    #   Obter o valor de aprendizagem
-                    #   treinar o sistema
-                    #   Escolher uma ação
+                    #   As redes neurais ATOR e CRITICA;
+                    #   Função para atualizar as redes neurais;
+                    #   Função para obter o valor de aprendizagem da CRITICA;
+                    #   Função para treinar as redes neurais;
+                    #   Função para escolher uma ação;
 
     def __init__(self): # Inicializador da Classe
         self.sess = tf.Session()    #inicializar uma seção do TensorFlow
@@ -48,11 +48,11 @@ class PPO(object):  # Classe PPO agrega:
 
         # CRITICA:
         with tf.variable_scope('critic'):   # Criação da rede neural
-            l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu, name='layer1-critic')   # Camada 1 da Critica: 
-                                                                                    #   self.tfs é o placeholder do estado
+            l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu, name='layer1-critic')   # Camada 1 entrada da Critica: 
+                                                                                    #   self.tfs é o placeholder do estado, funciona como entrada da rede
                                                                                     #   100 é o numero de neuronios 
-                                                                                    #   Relu é o tipo de ativação da rede
-            self.v = tf.layers.dense(l1, 1, name = 'V_layer')                       # Camada Valor da Critica: 
+                                                                                    #   Relu é o tipo de ativação da saida da rede
+            self.v = tf.layers.dense(l1, 1, name = 'V_layer')                       # Camada de saida de valores da CRITICA: 
                                                                                     #   l1 é a variavel referente a primeira camada da rede, 
                                                                                     #   1 é a quantidade de saidas da rede
                                                                                     #   A saida dessa rede será o Q-Value, o status do progreço do aprendizado
@@ -69,17 +69,17 @@ class PPO(object):  # Classe PPO agrega:
         # ATOR:
         #   Politica atual
         pi, pi_params = self._build_anet('pi', trainable=True)                  # Criação da rede neural (pi) para a politica atual do ATOR através da função build_anet, definindo como treinavel
-                                                                                #   pi é a saida da rede e pi_params são os parametros (estado atual) da rede
-                                                                                #   Os parametros pi_params sao ultilizados para atualizar as politicas atual a antiga.
+                                                                                #   pi é a saida da rede e pi_params são os pesos (estado atual) da rede
+                                                                                #   Os pesos pi_params sao ultilizados para atualizar as politicas atual a antiga.
 
         with tf.variable_scope('sample_action'):
-            self.sample_op = tf.squeeze(pi.sample(1), axis=0)   # choosing action
+            self.sample_op = tf.squeeze(pi.sample(1), axis=0)   # Escolhendo ação
 
         #   Politica antiga
         oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)        # Criação da rede neural oldpi para a politica antiga do ATOR através da função build_anet, definindo como não treinavel
 
-        with tf.variable_scope('update_oldpi'):                                                 # Atualização dos pesos dos parametros de oldpi tendo como referencia os pesos de pi
-            self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)] # A cada atualização da rede, os parametros da politica atual passam para a politica antiga
+        with tf.variable_scope('update_oldpi'):                                                 # Atualização dos pesos dos pesos de oldpi tendo como referencia os pesos de pi
+            self.update_oldpi_op = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)] # A cada atualização da rede, os pesos da politica atual passam para a politica antiga
                                                                                                 # Update_oldpi_op acumula todos os valores de pi ao decorrer do episodio
 
         # Implementação da função de perda PPO
@@ -95,8 +95,8 @@ class PPO(object):  # Classe PPO agrega:
                     self.tfadv*                                     #       a multiplicação da vantagem
                         tf.clip_by_value(                           #           pelo ratio clipado (limitado) por
                             ratio,                                  #               
-                            1.-METHOD['epsilon'],                   #                1 - o metodo Clipped surrogate objective
-                            1.+METHOD['epsilon']                    #                1 + o metodo Clipped surrogate objective              
+                            1.-METHOD['epsilon'],                   #                no maximo 1 - o metodo Clipped surrogate objective
+                            1.+METHOD['epsilon']                    #                no minimo 1 + o metodo Clipped surrogate objective              
                         )                                           # 
                 )                                                   # Obtendo assim em aloss a perda do Ator
             )
@@ -112,32 +112,57 @@ class PPO(object):  # Classe PPO agrega:
     
     # Função de atualizaçao
     def update(self, s, a, r): # Recebe o estado, a ação e a recompensa
-        self.sess.run(self.update_oldpi_op) # Executa a matriz update_oldpi_op que comtem todos os parametros de pi/oldpi
+        self.sess.run(self.update_oldpi_op) # Executa a matriz update_oldpi_op que comtem todos os pesos de pi/oldpi
         
         # Atualiza o ATOR
         adv = self.sess.run(self.advantage, {self.tfs: s, self.tfdc_r: r})  # Calcula a vantagem, ou seja, a recompensa do ATOR através 
-        [self.sess.run(self.atrain_op, {self.tfs: s, self.tfa: a, self.tfadv: adv}) for _ in range(A_UPDATE_STEPS)]
+        [self.sess.run(self.atrain_op, {self.tfs: s, self.tfa: a, self.tfadv: adv}) for _ in range(A_UPDATE_STEPS)] # Treina o ator
 
         # Atualiza a CRITICA através da função de treinamento
-        [self.sess.run(self.ctrain_op, {self.tfs: s, self.tfdc_r: r}) for _ in range(C_UPDATE_STEPS)]
+        [self.sess.run(self.ctrain_op, {self.tfs: s, self.tfdc_r: r}) for _ in range(C_UPDATE_STEPS)]   # Executa o treinamento da critica
+                                                                                                        #   ctrain_op é o treinamento da critica
+                                                                                                        #   tfs é o placehoder que recebe estado s do ambiente
+                                                                                                        #   tfdc_r é o placeholder que recebe a recompensa r do ambiente
+                                                                                                        #   C_UPDATE_STEPS é quantas vezes que a rede vai ser atualizada
 
-    def _build_anet(self, name, trainable): # Build the current & hold structure for the policies 
+    def _build_anet(self, name, trainable): # Constroi as redes neurais do ATOR 
+                                            #   name é o nome da rede
+                                            #   trainable determina se a rede é treinavel ou nao 
+                                            #   Build the current & hold structure for the policies 
         with tf.variable_scope(name):
-            l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu, trainable=trainable)
-            mu = 2 * tf.layers.dense(l1, A_DIM, tf.nn.tanh, trainable=trainable, name = 'mu_'+name)
-            sigma = tf.layers.dense(l1, A_DIM, tf.nn.softplus, trainable=trainable,name ='sigma_'+name )
-            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma) # Loc is the mean
-        params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name) #Recolecta los pesos de los layers l1,mu/2,sigma
-        return norm_dist, params
+            l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu, trainable=trainable)    # Camada 1 entrada do ATOR: 
+                                                                                    #   self.tfs é o placeholder do estado, funciona como entrada pra rede
+                                                                                    #   100 é o numero de neuronios 
+                                                                                    #   Relu é o tipo de ativação da saida da rede
+                                                                                    #   trainable determina se a rede é treinavel ou nao
+            mu = 2 * tf.layers.dense(l1, A_DIM, tf.nn.tanh, trainable=trainable, name = 'mu_'+name) # Camada mu do ATOR
+                                                                                                    #   Calcula a ação que vai ser tomada
+                                                                                                    #   l1 é a entrada da camada
+                                                                                                    #   A_DIM
+                                                                                                    #   tanh é o tipo de ativação da saida da camada, retorna um valor entre 1 e -1, 
+                                                                                                    #   que está sendo multiplicado por 2 para se adequar ao ambiente.
+                                                                                                    #   trainable determina se a rede é treinavel ou nao
+            sigma = tf.layers.dense(l1, A_DIM, tf.nn.softplus, trainable=trainable,name ='sigma_'+name )    # Camada sigma do ATOR
+                                                                                                            #   Calcula o desvio padrão, o range onde estará a possibilidade de ação 
+                                                                                                            #   l1 é a entrada da camada
+                                                                                                            #   A_DIM
+                                                                                                            #   softplus é o tipo de ativação da saida da camada 
+                                                                                                            #   trainable determina se a rede é treinavel ou nao
+            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)    # Normaliza a saida mu da rede, considerando sigma
+                                                                        # Loc is the mean
+        params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)   # Coleta em params os pesos das camadas l1,mu/2 e sigma
+        return norm_dist, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
 
-    def choose_action(self, s):
-        s = s[np.newaxis, :]
-        a = self.sess.run(self.sample_op, {self.tfs: s})[0]
-        return np.clip(a, -2, 2) # limita la salida de valores entre -2 & 2, a cada uno de los valores de 'a'
+    def choose_action(self, s): # Recebe o estado s e retorna uma ação a
+        s = s[np.newaxis, :]    #   Recebe o estado s e 
+        a = self.sess.run(self.sample_op, {self.tfs: s})[0] #   Executa sample_op com o placeholder tfs que receve o estado s e armazena a açao em a
+        return np.clip(a, -2, 2)    #   Retorna um valor de ação a clipado entre -2 e 2
+                                    #   Limita la salida de valores entre -2 & 2, a cada uno de los valores de 'a'
 
-    def get_v(self, s):
-        if s.ndim < 2: s = s[np.newaxis, :]
-        return self.sess.run(self.v, {self.tfs: s})[0, 0] # Salida de NN del Critic|| V = learned state-value function
+    def get_v(self, s): # Receve o estado s e retorna o valor do estado da aprendizagem da CRITICA
+        if s.ndim < 2: s = s[np.newaxis, :] # 
+        return self.sess.run(self.v, {self.tfs: s})[0, 0]   # Saida da rede neural CRITICA
+                                                            # Salida de NN del Critic|| V = learned state-value function
 
 ######################################################################################################################################
 
