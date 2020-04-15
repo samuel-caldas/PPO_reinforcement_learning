@@ -4,8 +4,9 @@ Based on:
 1. [https://arxiv.org/abs/1707.02286]
 2. [https://arxiv.org/abs/1707.06347]
 View more on this tutorial website: https://morvanzhou.github.io/tutorials
+and this video: https://www.youtube.com/watch?v=lehLSoMPmcM&t=144s
 """
-
+#   Importaçoes   #####################################################################################################################################
 #import tensorflow as tf
 # Compatibilidade com tensorflow v1
 import tensorflow.compat.v1 as tf
@@ -14,10 +15,11 @@ import numpy as np
 import matplotlib.pyplot as plt # Plota graficos matematicos
 import gym  # Environment: ambiente onde a simulação vai acontecer
 
-# Configurações
+#   Configurações   ###################################################################################################################################
+
 EP_MAX = 600            # Qantidade total de episódios
 EP_LEN = 200            # Quantas sequencias vão acontecer dentro de cada episódio
-GAMMA = 0.9             # Advantage (?)
+GAMMA = 0.9             # Avanço (?)
 A_LR = 0.0001           # Taxa de aprendizado do ATOR
 C_LR = 0.0002           # Taxa de aprendizado da CRITICA
 BATCH = 64              # Tamanho do pacote à entrar para treinamento em cada etapa (?)
@@ -30,6 +32,7 @@ METHOD = dict(name='clip', epsilon=0.2)     # Metodo de clip sujerido pelos pap�
                                             # (Clipped surrogate objective)
                                             # epsilon=0.2 Valor de epsilon sujerido pelos papéis
 
+#   Implementaçao da classe ppo   #####################################################################################################################
 
 class PPO(object):  # Classe PPO agrega:
                     #   As redes neurais ATOR e CRITICA;
@@ -73,7 +76,7 @@ class PPO(object):  # Classe PPO agrega:
                                                                                 #   Os pesos pi_params sao ultilizados para atualizar as politicas atual a antiga.
 
         with tf.variable_scope('sample_action'):
-            self.sample_op = tf.squeeze(pi.sample(1), axis=0)   # Escolhendo ação
+            self.sample_op = tf.squeeze(pi.sample(1), axis=0)   # Tira uma amostra de açao da politica atual pi do ATOR
 
         #   Politica antiga
         oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)        # Criação da rede neural oldpi para a politica antiga do ATOR através da função build_anet, definindo como não treinavel
@@ -148,56 +151,72 @@ class PPO(object):  # Classe PPO agrega:
                                                                                                             #   A_DIM
                                                                                                             #   softplus é o tipo de ativação da saida da camada 
                                                                                                             #   trainable determina se a rede é treinavel ou nao
-            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)    # Normaliza a saida mu da rede, considerando sigma
-                                                                        # Loc is the mean
+            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)            # Normaliza a saida mu da rede, considerando sigma
+                                                                                # Loc é a média
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)   # Coleta em params os pesos das camadas l1,mu/2 e sigma
         return norm_dist, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
 
-    def choose_action(self, s): # Recebe o estado s e retorna uma ação a
-        s = s[np.newaxis, :]    #   Recebe o estado s e 
+    def choose_action(self, s):     # Recebe o estado s e retorna uma ação a
+        s = s[np.newaxis, :]        #   Recebe o estado s e 
         a = self.sess.run(self.sample_op, {self.tfs: s})[0] #   Executa sample_op com o placeholder tfs que receve o estado s e armazena a açao em a
         return np.clip(a, -2, 2)    #   Retorna um valor de ação a clipado entre -2 e 2
                                     #   Limita la salida de valores entre -2 & 2, a cada uno de los valores de 'a'
 
-    def get_v(self, s): # Receve o estado s e retorna o valor do estado da aprendizagem da CRITICA
+    def get_v(self, s):             # Recebe o estado s e retorna o valor da taxa de aprendizagem da CRITICA
         if s.ndim < 2: s = s[np.newaxis, :] # 
-        return self.sess.run(self.v, {self.tfs: s})[0, 0]   # Saida da rede neural CRITICA
+        return self.sess.run(self.v, {self.tfs: s})[0, 0]   # Retorna a taxa de aprendizagem da CRITICA
+                                                            # v é a saida de valores da CRITICA
+                                                            # tfs é o placeholder que recebe o estado s
                                                             # Salida de NN del Critic|| V = learned state-value function
 
-######################################################################################################################################
+#   Implementaçao do ambiente   ########################################################################################################################
 
-env = gym.make('Pendulum-v0').unwrapped
-ppo = PPO()
-all_ep_r = []
+env = gym.make('Pendulum-v0').unwrapped # Instancia o ambiente pendulo
+ppo = PPO()                             # Instancia a classe PPO
+all_ep_r = []                           # Cria um array para a recompensa de todos os episodios
 
-for ep in range(EP_MAX):
-    s = env.reset()
-    buffer_s, buffer_a, buffer_r = [], [], []
-    ep_r = 0
-    for t in range(EP_LEN):    # in one episode
-        env.render()
-        a = ppo.choose_action(s)
-        s_, r, done, _ = env.step(a) # observation, reward, done, info|| 'a' is torque
-        buffer_s.append(s)
-        buffer_a.append(a)
-        buffer_r.append((r+8)/8)    # normalize reward, find to be useful
+#   Loop de episódios   #
+for ep in range(EP_MAX):                # EP_MAX: quantidade de episodios 
+    s = env.reset()                     # Redefine o ambiente e armazena o estado atual em s
+    buffer_s, buffer_a, buffer_r = [], [], []   # Cria tres arrais para o episódio:
+                                                #   buffer_s: buffer do estado
+                                                #   buffer_a: buffer da ação
+                                                #   buffer_r: buffer da recompensa
+    ep_r = 0                            # Recompensa do episódio
+#   Loop de episódio    #    
+    for t in range(EP_LEN):             # Duração de cada episodio
+        env.render()                    # Renderiza o ambiente
+        a = ppo.choose_action(s)        # Envia um estado s e recebe uma açao a 
+        s_, r, done, _ = env.step(a)    # Envia uma açao a ao ambiente e recebe o estado s_, e a recompensa r
+                                        # observation, reward, done, info|| 'a' is torque
+        buffer_s.append(s)              # Adiciona ao buffer de estado o estado atual s
+        buffer_a.append(a)              # Adiciona ao buffer de ação a açao atual a
+        buffer_r.append((r+8)/8)        # Adiciona ao buffer de recompensa a recompensa atual (?) normalizada (r+8)/8
+                                        # Normalize reward, find to be useful
         #print(r)
-        s = s_
-        ep_r += r
+        s = s_      # Atualiza a variavel de estado com o estado recebido pelo ambiente
+        ep_r += r   # soma a recompensa da ação a recompensa do episodio
 
         # update ppo
-        if (t+1) % BATCH == 0 or t == EP_LEN-1:
-            v_s_ = ppo.get_v(s_) # Obteniendo la respuesta de la NN del Critic, entregando el estado 's_' 
+        if (t+1) % BATCH == 0 or t == EP_LEN-1: #
+            v_s_ = ppo.get_v(s_)    # Passa o estado atual s_ e recebe o valor atual da taxa de aprendizagem da CRITICA
+                                    # Obteniendo la respuesta de la NN del Critic, entregando el estado 's_' 
                                     # V = learned state-value function
-            discounted_r = []
+            discounted_r = []       # Cria um array pra armazenar as recompensas calculadas
             for r in buffer_r[::-1]:
-                v_s_ = r + GAMMA * v_s_
-                discounted_r.append(v_s_)
-            discounted_r.reverse()
+                v_s_ = r + GAMMA * v_s_     # Calcula a recompensa multiplicando a recompensa recebida r pela GAMMA 
+                                            # e pelo valor da taxa de aprendizado do estado v_s_
+                discounted_r.append(v_s_)   # Adiciona ao array de recompensas calculadas 
+            discounted_r.reverse()          # Coloca o array de recompensas calculadas ao contrario
 
-            bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]
-            buffer_s, buffer_a, buffer_r = [], [], []
-            ppo.update(bs, ba, br) # Entranar el Cliente y el actor (Estado, acciones, discounted_r)
+            bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]    # vstack trnasforma os arrays que estão em linha, em colunas
+                                                                                                            # Esses arrays de colunas sao armazenados em bs ba e br
+            buffer_s, buffer_a, buffer_r = [], [], []   # Esvazia os buffers de estado, açao e recompensa
+            ppo.update(bs, ba, br)                      # Atualiza as redes com:
+                                                        #   Os estados aculmulados
+                                                        #   As ações aculmuladas
+                                                        #   As recompensas aculmuladas
+                                                        # Treine o cliente e o ator (status, ações, desconto de r)
             
     if ep == 0: all_ep_r.append(ep_r)
     else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
