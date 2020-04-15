@@ -22,8 +22,8 @@ C_LR = 0.0002           # Taxa de aprendizado da CRITICA
 BATCH = 64              # Tamanho do pacote à entrar para treinamento em cada etapa (?)
 A_UPDATE_STEPS = 20     # Quantidade de vezes que o treinamento do ATOR vai tomar a cadeia de dados de batch
 C_UPDATE_STEPS = 20     # Quantidade de vezes que o treinamento da CRITICA vai tomar a cadeia de dados de batch
-S_DIM, A_DIM = 3, 1     # S_DIM é a dimensao do estado, ou seja, quantas entradas ele terá
-                        # A_DIM é a dimensão das ações, ou seja, quantas acões podem ser executadas
+S_DIM = 3               # S_DIM é a dimensao do estado, ou seja, quantas entradas ele terá
+A_DIM = 1               # A_DIM é a dimensão das ações, ou seja, quantas acões podem ser executadas
 
 METHOD = dict(
     name='clip',    # Metodo de clip (Clipped surrogate objective) sujerido pelos papéis como mais eficiente
@@ -33,12 +33,13 @@ METHOD = dict(
 
 #   Implementaçao da classe ppo   #
 
-class PPO(object):  # Classe PPO agrega:
-                    #   As redes neurais ATOR e CRITICA;
-                    #   Função para atualizar as redes neurais;
-                    #   Função para obter o valor de aprendizagem da CRITICA;
-                    #   Função para treinar as redes neurais;
-                    #   Função para escolher uma ação;
+class PPO(object):  
+    # Classe PPO agrega:
+    #   As redes neurais ATOR e CRITICA;
+    #   Função para atualizar as redes neurais;
+    #   Função para obter o valor de aprendizagem da CRITICA;
+    #   Função para treinar as redes neurais;
+    #   Função para escolher uma ação;
 
     def __init__(self): # Construtor da Classe
         self.sess = tf.Session()    #inicializar uma seção do TensorFlow
@@ -62,7 +63,8 @@ class PPO(object):  # Classe PPO agrega:
         )                               # Esse placeholder é usado para treinar tanto o ATOR quanto a CRITICA
 
         # CRITICA:
-        with tf.variable_scope('critic'):   # Criação da rede neural
+        with tf.variable_scope('critic'):   
+            # Criação da rede neural:
             l1 = tf.layers.dense(       # Camada 1 entrada da Critica: 
                 self.tfs,               #   self.tfs é o placeholder do estado, funciona como entrada da rede
                 100,                    #   100 é o numero de neuronios 
