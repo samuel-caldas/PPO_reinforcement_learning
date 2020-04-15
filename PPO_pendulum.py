@@ -288,15 +288,17 @@ for ep in range(EP_MAX):    # EP_MAX: quantidade de episodios
     else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
     # Escreve na tela
     print(
-        'Ep: %i' % ep,  # Numero do episodio
+        'Ep: %i' % ep,      # Numero do episodio
         "|Ep_r: %i" % ep_r, # Recompensa do episodio
         ("|Lam: %.4f" % METHOD['lam']) if METHOD['name'] == 'kl_pen' else '',
     )
 
-plt.plot(
+plt.plot( # Plota o grafico de todas as recompensas
     np.arange(
         len(all_ep_r)
     ), 
     all_ep_r
 )
-plt.xlabel('Episode');plt.ylabel('Moving averaged episode reward');plt.show()
+plt.xlabel('Episode')
+plt.ylabel('Moving averaged episode reward')
+plt.show()
