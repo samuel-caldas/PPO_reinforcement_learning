@@ -175,10 +175,10 @@ class PPO(object):
                                                                                                         
                                                                                                         
 
-    def _build_anet(self, name, trainable): # Constroi as redes neurais do ATOR 
-                                            #   name é o nome da rede
-                                            #   trainable determina se a rede é treinavel ou nao 
-                                            #   Build the current & hold structure for the policies 
+    def _build_anet(self, name, trainable): 
+        # Constroi as redes neurais do ATOR
+        #    name é o nome da rede
+        #    trainable determina se a rede é treinavel ou nao
         with tf.variable_scope(name):   
             l1 = tf.layers.dense(       # Camada 1 entrada do ATOR: 
                 self.tfs,               #   self.tfs é o placeholder do estado, funciona como entrada pra rede
@@ -191,14 +191,14 @@ class PPO(object):
             mu = 2 * tf.layers.dense(    # Camada mu do ATOR  
                 l1,                     #   l1 é a entrada da camada
                 A_DIM,                  #   A_DIM
-                tf.nn.tanh,             #   tanh é o tipo de ativação da saida da camada, retorna um valor entre 1 e -1, 
-                                        #   que está sendo multiplicado por 2 para se adequar ao ambiente.
+                tf.nn.tanh,             #   tanh é o tipo de ativação da saida da camada, retorna um valor entre 1 e -1
                 trainable=trainable,    #   trainable determina se a rede é treinavel ou nao
                 name = 'mu_'+name       #   name é o nome da camada
-            ) 
+            )                           #   O resultado é multiplicado por 2 para se adequar ao ambiente, que trabalha com um range 2 e -2.
 
-            # Camada sigma do ATOR    
-            sigma = tf.layers.dense(    #   Calcula o desvio padrão, o range onde estará a possibilidade de ação 
+            
+            #   Calcula o desvio padrão, o range onde estará a possibilidade de ação    
+            sigma = tf.layers.dense(    # Camada sigma do ATOR  
                 l1,                     #   l1 é a entrada da camada
                 A_DIM,                  #   A_DIM
                 tf.nn.softplus,         #   softplus é o tipo de ativação da saida da camada 
@@ -211,9 +211,9 @@ class PPO(object):
                 scale=sigma
             )            
                                                                                 
-        params = tf.get_collection(                 # Coleta em params os pesos das camadas l1,mu/2 e sigma do scopo atual
-            tf.GraphKeys.GLOBAL_VARIABLES, 
-            scope=name
+        params = tf.get_collection(             # Coleta em params os pesos 
+            tf.GraphKeys.GLOBAL_VARIABLES,      # das camadas l1,mu/2 e sigma
+            scope=name                          # do scopo atual
         )   
         return norm_dist, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
 
@@ -221,26 +221,22 @@ class PPO(object):
         s = s[np.newaxis, :]        #   Recebe o estado s e 
         a = self.sess.run(
             self.sample_op,         #   Executa sample_op 
-            {
-                self.tfs: s         #   com o placeholder tfs que recebe o estado s e armazena a açao em a
-            }
-        )[0] 
+            {self.tfs: s}           #   com o placeholder tfs que recebe o estado s e armazena a açao em a
+        )[0]    #
         return np.clip(a, -2, 2)    #   Retorna um valor de ação a clipado entre -2 e 2
 
     def get_v(self, s):             # Recebe o estado s e retorna o valor da taxa de aprendizagem da CRITICA
         if s.ndim < 2: s = s[np.newaxis, :] # 
         return self.sess.run(   # Retorna a taxa de aprendizagem da CRITICA
             self.v,             # v é a saida de valores da CRITICA
-            {
-                self.tfs: s     # tfs é o placeholder que recebe o estado s
-            }
-        )[0, 0]   
+            {self.tfs: s}       # tfs é o placeholder que recebe o estado s
+        )[0, 0] #
 
 #   Implementaçao do ambiente   #
 
 env = gym.make('Pendulum-v0').unwrapped # Instancia o ambiente pendulo
-ppo = PPO()         # Instancia a classe PPO
-all_ep_r = []       # Cria um array para a recompensa de todos os episodios
+ppo = PPO()                             # Instancia a classe PPO
+all_ep_r = []                           # Cria um array para a recompensa de todos os episodios
 
 #   Loop de episódios   #
 for ep in range(EP_MAX):    # EP_MAX: quantidade de episodios 
@@ -287,12 +283,13 @@ for ep in range(EP_MAX):    # EP_MAX: quantidade de episodios
                 ba,     #   As ações aculmuladas
                 br      #   As recompensas aculmuladas
             )                      
-
-    if ep == 0: all_ep_r.append(ep_r)
+    # Adiciona a recompensa do episodio atual ao array de recompensas
+    if ep == 0: all_ep_r.append(ep_r) 
     else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
+    # Escreve na tela
     print(
-        'Ep: %i' % ep,
-        "|Ep_r: %i" % ep_r,
+        'Ep: %i' % ep,  # Numero do episodio
+        "|Ep_r: %i" % ep_r, # Recompensa do episodio
         ("|Lam: %.4f" % METHOD['lam']) if METHOD['name'] == 'kl_pen' else '',
     )
 
