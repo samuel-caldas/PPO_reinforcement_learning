@@ -206,7 +206,7 @@ class PPO(object):
                 name ='sigma_'+name     #   name é o nome da camada
             )    
 
-            norm_dist = tf.distributions.Normal(    # Normaliza a saida mu da rede, considerando sigma
+            polyce = tf.distributions.Normal(    # Normaliza a saida mu da rede, considerando sigma
                 loc=mu,                             # Loc é a média
                 scale=sigma
             )            
@@ -215,7 +215,7 @@ class PPO(object):
             tf.GraphKeys.GLOBAL_VARIABLES,      # das camadas l1,mu/2 e sigma
             scope=name                          # do scopo atual
         )   
-        return norm_dist, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
+        return polyce, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
 
     def choose_action(self, s):     # Recebe o estado s e retorna uma ação a
         s = s[np.newaxis, :]        #   Recebe o estado s e 
