@@ -43,45 +43,45 @@ class PPO(object):
     #   Função para escolher uma ação;
 
     def __init__(self): # Construtor da Classe
-        self.sess = tf.Session()    #inicializar uma seção do TensorFlow
+        self.sess = tf.compat.v1.Session()    #inicializar uma seção do TensorFlow
         # Declaração das entradas das redes:
-        self.tfs = tf.placeholder(  # Estado do ambiente: a rede recebe o estado do ambiente através desse placeholder
+        self.tfs = tf.compat.v1.placeholder(  # Estado do ambiente: a rede recebe o estado do ambiente através desse placeholder
             tf.float32,             #   Tipo do placeholder
             [None, S_DIM],         #   Dimensoes do placeholder
             'state'                 #   Nome do placeholder
         )  
 
-        self.tfa = tf.placeholder(  # Ação escolhida pela rede é informada através desse placeholder 
+        self.tfa = tf.compat.v1.placeholder(  # Ação escolhida pela rede é informada através desse placeholder 
             tf.float32,                 #   Tipo do placeholder
             [None, A_DIM],              #   Dimensoes do placeholder
             'action'                    #   Nome do placeholder
         )  
 
-        self.tfadv = tf.placeholder(    # Calculo do ganho que a rede obteve no episódio, calculado fora da classe PPO.
+        self.tfadv = tf.compat.v1.placeholder(    # Calculo do ganho que a rede obteve no episódio, calculado fora da classe PPO.
             tf.float32,                 #   Tipo do placeholder
             [None, 1],                  #   Tamanho do placeholder
             'advantage'                 #   Nome do placeholder
         )                               # Esse placeholder é usado para treinar tanto o ATOR quanto a CRITICA
 
         # CRITICA:
-        with tf.variable_scope('critic'):   
+        with tf.compat.v1.variable_scope('critic'):   
             # Criação da rede neural:
-            l1 = tf.layers.dense(       # Camada 1 entrada da Critica: 
+            l1 = tf.compat.v1.layers.dense(       # Camada 1 entrada da Critica: 
                 self.tfs,               #   self.tfs é o placeholder do estado, funciona como entrada da rede
                 100,                    #   100 é o numero de neuronios 
                 tf.nn.relu,             #   Relu é o tipo de ativação da saida da camada
                 name='layer1-critic'    #   name é o nome da camada
             )   
 
-            self.v = tf.layers.dense(   # Camada de saida de valores da CRITICA: 
+            self.v = tf.compat.v1.layers.dense(   # Camada de saida de valores da CRITICA: 
                 l1,                     #   l1 é a variavel referente a primeira camada da rede, 
                 1,                      #   1 é a quantidade de saidas da rede
                 name = 'V_layer'        #   name é o nome da camada  
             )                           #   A saida dessa rede será o Q-Value, o status do progreço do aprendizado
 
         # Metodo de treinamento para o CRITICA, ou seja, o metodo de aprendizagem:
-        with tf.variable_scope('ctrain'):
-            self.tfdc_r = tf.placeholder(   # A recompensa de cada episódio é inserida na rede através desse placeholder
+        with tf.compat.v1.variable_scope('ctrain'):
+            self.tfdc_r = tf.compat.v1.placeholder(   # A recompensa de cada episódio é inserida na rede através desse placeholder
                 tf.float32,                 #   Tipo do placeholder
                 [None, 1],                  #   Dimensoes do placeholder
                 'discounted_r'              #   Nome do placeholder
@@ -89,12 +89,12 @@ class PPO(object):
             self.advantage = self.tfdc_r - self.v   # Atraves da recompensa discounted_r/tfdc_r subtraida pelo
                                                     # valor de aprendizagem V_layer/v obtemos a vantagem
             self.closs = tf.reduce_mean(    # tf.reduce_mean calcula a média. 
-                tf.square(                  # tf.square calcula o quadrado
+                input_tensor=tf.square(                  # tf.square calcula o quadrado
                     self.advantage          # da vantagem
                 )
             )                               # ! Através disso obtemos em closs o Loss ou a Perda da CRITICA                  
                                                
-            self.ctrain_op = tf.train.AdamOptimizer(C_LR).minimize(self.closs)  # Ultilizamos o otimizador ADAM, com a taxa de aprendizado da CRITICA C_LR
+            self.ctrain_op = tf.compat.v1.train.AdamOptimizer(C_LR).minimize(self.closs)  # Ultilizamos o otimizador ADAM, com a taxa de aprendizado da CRITICA C_LR
                                                                                 # com a funçao minimize processamos os gradientes da CRITICA através da perda da CRITICA em closs
                                                                                 #   Poderiamos usar tambem o SGD como otimizador.
         # ATOR:
@@ -103,27 +103,27 @@ class PPO(object):
                                                                                 #   pi é a saida da rede e pi_params são os pesos (estado atual) da rede
                                                                                 #   Os pesos pi_params sao ultilizados para atualizar as politicas atual a antiga.
 
-        with tf.variable_scope('sample_action'):
+        with tf.compat.v1.variable_scope('sample_action'):
             self.sample_op = tf.squeeze(pi.sample(1), axis=0)               # Tira uma amostra de açao da politica atual pi do ATOR
 
         #   Politica antiga
         oldpi, oldpi_params = self._build_anet('oldpi', trainable=False)    # Criação da rede neural oldpi para a politica antiga do ATOR através da função build_anet, definindo como não treinavel
 
-        with tf.variable_scope('update_oldpi'):                                                 # Atualização dos pesos dos pesos de oldpi tendo como referencia os pesos de pi
+        with tf.compat.v1.variable_scope('update_oldpi'):                                                 # Atualização dos pesos dos pesos de oldpi tendo como referencia os pesos de pi
             self.update_oldpi_op=[]
             for p, oldp in zip(pi_params, oldpi_params):
                 self.update_oldpi_op.append(oldp.assign(p)) # A cada atualização da rede, os pesos da politica atual passam para a politica antiga
                                                                                                 # Update_oldpi_op acumula todos os valores de pi ao decorrer do episodio
 
         # Implementação da função de perda PPO
-        with tf.variable_scope('loss'): # Funçao de perda:
-            with tf.variable_scope('surrogate_pp'):
+        with tf.compat.v1.variable_scope('loss'): # Funçao de perda:
+            with tf.compat.v1.variable_scope('surrogate_pp'):
                 ratio = pi.prob(self.tfa) / oldpi.prob(self.tfa)    # O Ratio é a razão da probabilidade da ação tfa na politica nova 
                                                                     # pela probabilidade da ação tfa na politica antiga.
                 surr = ratio * self.tfadv                           # Surrogate é a Razão multiplicada pela vantagem
 
             self.aloss = -tf.reduce_mean(                           # tf.educe_mean calcula a negativa da média do
-                tf.minimum(                                         #   menor valor entre
+                input_tensor=tf.minimum(                                         #   menor valor entre
                     surr,                                           #       o Surrogate e
                     self.tfadv*                                     #       a multiplicação da vantagem
                         tf.clip_by_value(                           #           pelo ratio clipado (limitado) por
@@ -135,13 +135,13 @@ class PPO(object):
             )
 
         # Metodo de treinamento para o ATOR, ou seja, o metodo de aprendizagem:
-        with tf.variable_scope('atrain'):
-            self.atrain_op = tf.train.AdamOptimizer(A_LR).minimize(self.aloss)  # Ultilizamos o otimizador ADAM, com a taxa de aprendizado do ATOR A_LR
+        with tf.compat.v1.variable_scope('atrain'):
+            self.atrain_op = tf.compat.v1.train.AdamOptimizer(A_LR).minimize(self.aloss)  # Ultilizamos o otimizador ADAM, com a taxa de aprendizado do ATOR A_LR
                                                                                 # com minimize processamos os gradientes do ATOR através da perda do ATOR em aloss
 
-        tf.summary.FileWriter("log/", self.sess.graph)      # Salvando o modelo na pasta log para analize futura no tensorboard
+        tf.compat.v1.summary.FileWriter("log/", self.sess.graph)      # Salvando o modelo na pasta log para analize futura no tensorboard
 
-        self.sess.run(tf.global_variables_initializer())    # Inicializando todas as váriaveis definidas
+        self.sess.run(tf.compat.v1.global_variables_initializer())    # Inicializando todas as váriaveis definidas
     
     # Função de atualizaçao
     def update(self, s, a, r):              # Recebe o estado, a ação e a recompensa
@@ -160,18 +160,18 @@ class PPO(object):
         # Constroi as redes neurais do ATOR
         #    name é o nome da rede
         #    trainable determina se a rede é treinavel ou nao
-        with tf.variable_scope(name):   
-            l1 = tf.layers.dense(self.tfs, 100, tf.nn.relu, trainable=trainable)
+        with tf.compat.v1.variable_scope(name):   
+            l1 = tf.compat.v1.layers.dense(self.tfs, 100, tf.nn.relu, trainable=trainable)
 
             #   Calcula a ação que vai ser tomada
-            mu = 2 * tf.layers.dense(l1, A_DIM, tf.nn.tanh, trainable=trainable, name = 'mu_'+name)                           #   O resultado é multiplicado por 2 para se adequar ao ambiente, que trabalha com um range 2 e -2.
+            mu = 2 * tf.compat.v1.layers.dense(l1, A_DIM, tf.nn.tanh, trainable=trainable, name = 'mu_'+name)                           #   O resultado é multiplicado por 2 para se adequar ao ambiente, que trabalha com um range 2 e -2.
             
             #   Calcula o desvio padrão, o range onde estará a possibilidade de ação    
-            sigma = tf.layers.dense(l1, A_DIM, tf.nn.softplus, trainable=trainable, name ='sigma_'+name)    
+            sigma = tf.compat.v1.layers.dense(l1, A_DIM, tf.nn.softplus, trainable=trainable, name ='sigma_'+name)    
 
-            polyce = tf.distributions.Normal(loc=mu, scale=sigma)
+            polyce = tf.compat.v1.distributions.Normal(loc=mu, scale=sigma)
 
-        params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)   
+        params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope=name)   
         return polyce, params    # Retorna a ação e os pesos atuais das redes para serem armazenados na politica antiga.
 
     def choose_action(self, s):     # Recebe o estado s e retorna uma ação a

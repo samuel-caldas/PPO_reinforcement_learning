@@ -1,0 +1,47 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 1 files
+Detected 0 issues that require attention
+--------------------------------------------------------------------------------
+================================================================================
+Detailed log follows:
+
+================================================================================
+================================================================================
+Input tree: 'PPO_reinforcement_learning'
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'PPO_reinforcement_learning\\PPO_pendulum.py'
+ outputting to 'PPO_reinforcement_learning_v2\\PPO_pendulum.py'
+--------------------------------------------------------------------------------
+
+46:20: INFO: Renamed 'tf.Session' to 'tf.compat.v1.Session'
+48:19: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+54:19: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+60:21: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+67:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+69:17: INFO: Renamed 'tf.layers.dense' to 'tf.compat.v1.layers.dense'
+76:21: INFO: Renamed 'tf.layers.dense' to 'tf.compat.v1.layers.dense'
+83:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+84:26: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+91:25: INFO: Added keywords to args of function 'tf.reduce_mean'
+97:29: INFO: Renamed 'tf.train.AdamOptimizer' to 'tf.compat.v1.train.AdamOptimizer'
+106:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+112:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+119:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+120:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+125:26: INFO: Added keywords to args of function 'tf.reduce_mean'
+138:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+139:29: INFO: Renamed 'tf.train.AdamOptimizer' to 'tf.compat.v1.train.AdamOptimizer'
+142:8: INFO: tf.summary.FileWriter requires manual check. The TF 1.x summary API cannot be automatically migrated to TF 2.0, so symbols have been converted to tf.compat.v1.summary.* and must be migrated manually. Typical usage will only require changes to the summary writing logic, not to individual calls like scalar(). For examples of the new summary API, see the Effective TF 2.0 migration document or check the TF 2.0 TensorBoard tutorials.
+142:8: INFO: Renamed 'tf.summary.FileWriter' to 'tf.compat.v1.summary.FileWriter'
+144:22: INFO: Renamed 'tf.global_variables_initializer' to 'tf.compat.v1.global_variables_initializer'
+163:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+164:17: INFO: Renamed 'tf.layers.dense' to 'tf.compat.v1.layers.dense'
+167:21: INFO: Renamed 'tf.layers.dense' to 'tf.compat.v1.layers.dense'
+170:20: INFO: Renamed 'tf.layers.dense' to 'tf.compat.v1.layers.dense'
+172:21: INFO: Renamed 'tf.distributions.Normal' to 'tf.compat.v1.distributions.Normal'
+174:17: INFO: Renamed 'tf.get_collection' to 'tf.compat.v1.get_collection'
+174:35: INFO: Renamed 'tf.GraphKeys' to 'tf.compat.v1.GraphKeys'
+--------------------------------------------------------------------------------
+
