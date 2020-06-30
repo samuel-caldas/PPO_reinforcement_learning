@@ -15,6 +15,12 @@ import gym                          # GYM Environment: ambiente onde a simulaç�
 
 #   Configurações   #
 
+#ENV = 'Breakout-ram-v0'
+#ENV = 'LunarLander-v2'
+#ENV = 'CartPole-v0'
+#ENV = 'CartPole-v1'
+ENV = 'Pendulum-v0'
+
 EP_MAX = 600            # Qantidade total de episódios
 EP_LEN = 200            # Quantas sequencias vão acontecer dentro de cada episódio
 GAMMA = 0.9             # Avanço (?)
@@ -184,7 +190,7 @@ class PPO(object):
         return self.sess.run(self.v, {self.tfs: s})[0, 0]
 
 #   Implementaçao do ambiente   #
-env = gym.make('Pendulum-v0').unwrapped # Instancia o ambiente pendulo
+env = gym.make(ENV).unwrapped # Instancia o ambiente pendulo
 ppo = PPO()                             # Instancia a classe PPO
 all_ep_r = []                           # Cria um array para a recompensa de todos os episodios
 
