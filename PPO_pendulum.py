@@ -6,9 +6,9 @@
 
 #   Importaçoes   #
 
-#import tensorflow.compat.v1 as tf   # Workaround para retrocompatibilidade 
-#tf.disable_v2_behavior()            # com tensorflow v1
-import tensorflow as tf
+import tensorflow.compat.v1 as tf   # Workaround para retrocompatibilidade 
+tf.disable_v2_behavior()            # com tensorflow v1
+#import tensorflow as tf
 import numpy as np                  # Numpy para trabalhar com arrays
 import matplotlib.pyplot as plt     # Matplotlib plota graficos matematicos
 import gym                          # GYM Environment: ambiente onde a simulação vai acontecer
